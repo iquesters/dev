@@ -1,0 +1,35 @@
+{
+  "name": "iquesters/dev",
+  "description": "Dev package",
+  "type": "library",
+  "require": {
+    "laravel/framework": "^10.0|^11.0|^12.0",
+    "iquesters/foundation": "^1.0"
+  },
+  "require-dev": {
+    "laravel/tinker": "^2.8",
+    "laravel/pint": "^1.0"
+  },
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Iquesters\\Dev\\": "src/",
+      "Iquesters\\Dev\\Database\\Seeders\\": "database/seeders/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Pritam Bag",
+      "email": "pritam02b@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Iquesters\\Dev\\DevServiceProvider"
+      ]
+    }
+  }
+}
