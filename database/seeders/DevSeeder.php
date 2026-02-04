@@ -44,13 +44,13 @@ class DevSeeder extends BaseSeeder
                                     "visible" => true,
                                 ],
                                 [
-                                    "data" => "Finished At",
-                                    "title" => "Timeout",
+                                    "data" => "finished_at",
+                                    "title" => "Finished At",
                                     "visible" => true,
                                 ],
                                 [
-                                    "data" => "Duration Seconds",
-                                    "title" => "Sleep",
+                                    "data" => "duration_seconds",
+                                    "title" => "Duration Seconds",
                                     "visible" => true,
                                 ],
                                 [
