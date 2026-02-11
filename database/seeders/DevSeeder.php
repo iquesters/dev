@@ -68,7 +68,12 @@ class DevSeeder extends BaseSeeder
                         "default_view_mode" => "table"
                     ]
                 ]
-            ]
+            ],
+            [
+                "icon" => "fas fa-satellite-dish",
+                "label" => "Trigger Vector",
+                "route" => "vectors.index",
+            ],
         ],
     ];
 
