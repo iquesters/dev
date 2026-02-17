@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('knobs', function (Blueprint $table) {
             $table->id();
             $table->ulid('uid')->unique();
+            $table->unsignedInteger('version')->default(0);
             $table->longText('knob');
+            $table->string('sha256', 64);
             $table->string('status')->default('unknown');
             $table->bigInteger('created_by')->default(0);
             $table->bigInteger('updated_by')->default(0);
