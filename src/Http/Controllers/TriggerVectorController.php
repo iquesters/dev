@@ -58,29 +58,33 @@ class TriggerVectorController extends Controller
 
         try {
 
+            $supportedProviders = [
+                Constants::WOOCOMMERCE,
+                // add new ecommerce providers here later
+            ];
+
             $integration = Integration::where('uid', $uid)
                 ->with(['metas', 'supportedIntegration'])
                 ->firstOrFail();
 
-            // Validate integration type
-            if (
-                !$integration->supportedIntegration ||
-                $integration->supportedIntegration->name !== Constants::WOOCOMMERCE
-            ) {
-                $this->logWarning("Invalid integration type for UID: {$uid}");
+            $providerName = $integration->supportedIntegration->name ?? null;
+
+            if (!$providerName || !in_array($providerName, $supportedProviders, true)) {
+                $this->logWarning("Unsupported integration type for UID: {$uid}");
                 $this->logMethodEnd('INVALID TYPE');
 
-                return back()->with('error', 'Invalid integration type.');
+                return back()->with('error', 'Unsupported integration provider.');
             }
 
-            // Build payload from stored meta
             $payload = [
-                'integration_id'       => $integration->id,
-                'integration_uid'      => $integration->uid,
-                'url'                  => $integration->getMeta('website_url'),
-                'consumer_key'         => $integration->getMeta('consumer_key'),
-                'consumer_secret'      => $integration->getMeta('consumer_secret'),
-                'integration_provider' => $integration->supportedIntegration->name,
+                'integration_id' => $integration->id,
+                'systems' => [
+                    [
+                        'integration_provider' => $providerName,
+                        'integration_uuid'     => $integration->uid,
+                        'recreate_flag'        => false,
+                    ]
+                ],
             ];
 
             $this->logDebug('Dispatching SyncVectorJob', json_encode($payload));

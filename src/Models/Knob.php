@@ -13,13 +13,11 @@ class Knob extends Model
 
     protected $fillable = [
         'uid',
+        'version',
         'knob',
+        'sha256',
         'status',
         'created_by',
         'updated_by',
-    ];
-
-    protected $casts = [
-        'knob' => 'array',
     ];
 }
