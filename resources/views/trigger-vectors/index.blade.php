@@ -73,6 +73,12 @@
               Force clean up
             </label>
           </div>
+          <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" value="1" id="recreateFlag" name="recreate_flag">
+            <label class="form-check-label" for="recreateFlag">
+              Recreate
+            </label>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-sm btn-outline-dark" data-bs-dismiss="modal">Cancel</button>
@@ -99,6 +105,7 @@ $(document).ready(function () {
         modal.find('#triggerConfirmationText').text(`Are you sure you want to trigger vector sync for "${name}"?`);
         modal.find('#triggerForm').attr('action', `/vector/${uid}/trigger`);
         modal.find('#forceCleanup').prop('checked', false); // reset checkbox
+        modal.find('#recreateFlag').prop('checked', false); // reset checkbox
     });
 });
 </script>

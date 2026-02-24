@@ -92,10 +92,12 @@ class TriggerVectorController extends Controller
                 return back()->with('error', 'Unsupported integration provider.');
             }
 
-            // Check if force cleanup checkbox was checked
+            // Check optional flags from modal checkboxes
             $forceCleanup = (bool) request()->input('force_cleanup', false);
+            $recreateFlag = (bool) request()->input('recreate_flag', false);
 
             $this->logDebug("Force cleanup flag is: " . ($forceCleanup ? 'true' : 'false'));
+            $this->logDebug("Recreate flag is: " . ($recreateFlag ? 'true' : 'false'));
 
             $payload = [
                 'integration_id' => $integration->id,
@@ -104,7 +106,7 @@ class TriggerVectorController extends Controller
                     [
                         'integration_provider' => $providerName,
                         'integration_uuid'     => $integration->uid,
-                        'recreate_flag'        => false,
+                        'recreate_flag'        => $recreateFlag,
                     ]
                 ],
             ];
