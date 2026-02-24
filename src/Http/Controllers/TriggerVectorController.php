@@ -20,7 +20,7 @@ class TriggerVectorController extends Controller
         $this->logMethodStart('Loading WooCommerce integrations');
 
         try {
-
+            // Load active WooCommerce integrations
             $integrations = Integration::query()
                 ->whereHas('supportedIntegration', function ($query) {
                     $query->where('name', Constants::WOOCOMMERCE);
@@ -29,26 +29,42 @@ class TriggerVectorController extends Controller
                     'supportedIntegration',
                     'organisations',
                     'creator',
-                    'metas'
+                    'metas',
                 ])
                 ->where('status', 'active')
                 ->get();
 
-            $this->logInfo('Integrations loaded: ' . $integrations->count());
+            // Load latest successful vector response for each integration
+            $integrationIds = $integrations->pluck('id')->toArray();
 
+            $latestVectorResponses = \Iquesters\Dev\Models\VectorResponse::query()
+                ->whereIn('integration_id', $integrationIds)
+                ->where('status', 'active')
+                ->select('integration_id', 'finished_at')
+                ->orderBy('finished_at', 'desc')
+                ->get()
+                ->groupBy('integration_id')
+                ->map(function ($responses) {
+                    return $responses->first(); // take the latest finished_at
+                });
+
+            // Attach latest finished_at to each integration
+            foreach ($integrations as $integration) {
+                $integration->last_vector_sync = optional($latestVectorResponses[$integration->id] ?? null)->finished_at;
+            }
+
+            $this->logInfo('Integrations loaded: ' . $integrations->count());
             $this->logMethodEnd();
 
             return view('dev::trigger-vectors.index', compact('integrations'));
 
         } catch (\Throwable $e) {
-
             $this->logError('Index failed: ' . $e->getMessage());
             $this->logMethodEnd('FAILED');
 
             return back()->with('error', $e->getMessage());
         }
     }
-
     /**
      * Trigger SyncVectorJob manually
      */
@@ -72,12 +88,17 @@ class TriggerVectorController extends Controller
             if (!$providerName || !in_array($providerName, $supportedProviders, true)) {
                 $this->logWarning("Unsupported integration type for UID: {$uid}");
                 $this->logMethodEnd('INVALID TYPE');
-
                 return back()->with('error', 'Unsupported integration provider.');
             }
 
+            // Check if force cleanup checkbox was checked
+            $forceCleanup = (bool) request()->input('force_cleanup', false);
+
+            $this->logDebug("Force cleanup flag is: " . ($forceCleanup ? 'true' : 'false'));
+
             $payload = [
                 'integration_id' => $integration->id,
+                'force_cleanup'  => $forceCleanup,
                 'systems' => [
                     [
                         'integration_provider' => $providerName,
@@ -88,7 +109,6 @@ class TriggerVectorController extends Controller
             ];
 
             $this->logDebug('Dispatching SyncVectorJob', json_encode($payload));
-
             SyncVectorJob::dispatch($payload);
 
             $this->logInfo("Job dispatched for UID: {$uid}");
@@ -100,7 +120,6 @@ class TriggerVectorController extends Controller
             );
 
         } catch (\Throwable $e) {
-
             $this->logCritical("Trigger failed for UID {$uid}: " . $e->getMessage());
             $this->logMethodEnd('FAILED');
 
