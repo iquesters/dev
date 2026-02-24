@@ -15,7 +15,7 @@ class DevSeeder extends BaseSeeder
         'module_sidebar_menu' => [
             [
                 "icon" => "fas fa-draw-polygon",
-                "label" => "Vector list",
+                "label" => "Vector Responses",
                 "route" => "ui.list",
                 "table_schema" => [
                     "slug" => "vector-response-table",
@@ -68,6 +68,11 @@ class DevSeeder extends BaseSeeder
                         "default_view_mode" => "table"
                     ]
                 ]
+            ],
+            [
+                "icon" => "fas fa-draw-polygon",
+                "label" => "Vector Responses Old",
+                "route" => "vectors.responses.index",
             ],
             [
                 "icon" => "fas fa-satellite-dish",
