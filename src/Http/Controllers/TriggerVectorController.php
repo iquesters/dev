@@ -6,6 +6,7 @@ use Illuminate\Routing\Controller;
 use Iquesters\Integration\Models\Integration;
 use Iquesters\Integration\Jobs\SyncVectorJob;
 use Iquesters\Dev\Constants\Constants;
+use Iquesters\Dev\Models\VectorResponse;
 use Iquesters\Foundation\System\Traits\Loggable;
 
 class TriggerVectorController extends Controller
@@ -124,6 +125,34 @@ class TriggerVectorController extends Controller
             $this->logMethodEnd('FAILED');
 
             return back()->with('error', 'Unable to trigger vector job.');
+        }
+    }
+
+    /**
+     * Display vector responses in descending order for UI datatable.
+     */
+    public function vectorResponses()
+    {
+        $this->logMethodStart('Loading vector responses for UI');
+
+        try {
+            $vectorResponses = VectorResponse::query()
+                ->orderByDesc('id')
+                ->get();
+
+            $integrationNames = Integration::query()
+                ->whereIn('id', $vectorResponses->pluck('integration_id')->unique()->filter()->values())
+                ->pluck('name', 'id');
+
+            $this->logInfo('Vector responses loaded: ' . $vectorResponses->count());
+            $this->logMethodEnd();
+
+            return view('dev::vector-responses.index', compact('vectorResponses', 'integrationNames'));
+        } catch (\Throwable $e) {
+            $this->logError('Vector responses list failed: ' . $e->getMessage());
+            $this->logMethodEnd('FAILED');
+
+            return back()->with('error', $e->getMessage());
         }
     }
 }
