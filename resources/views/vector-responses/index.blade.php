@@ -26,7 +26,7 @@
                         <pre class="mb-0" style="white-space: pre-wrap; word-break: break-word; max-width: 700px;">{{ $row->response }}</pre>
                     </td>
                     <td>{{ $row->duration_seconds ?? '-' }}</td>
-                    <td><span class="badge badge-{{ $row->status }}">{{ $row->status }}</span></td>
+                    <td><x-userinterface::status :status="$row->status" /></td>
                     <td>{{ $row->started_at ? \Iquesters\Foundation\Helpers\DateTimeHelper::displayDateTime($row->started_at) : '-' }}</td>
                     <td>{{ $row->finished_at ? \Iquesters\Foundation\Helpers\DateTimeHelper::displayDateTime($row->finished_at) : '-' }}</td>
                 </tr>

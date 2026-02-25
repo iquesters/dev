@@ -30,7 +30,7 @@
             </td>
             <td>{{ optional($integration->creator)->name ?? '-' }}</td>
             <td>
-                <span class="badge badge-{{ $integration->status }}">{{ $integration->status }}</span>
+                <x-userinterface::status :status="$integration->status" />
             </td>
             <td>
                 @if($integration->last_vector_sync)
