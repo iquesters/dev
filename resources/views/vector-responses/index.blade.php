@@ -1,6 +1,13 @@
-@extends('userinterface::layouts.app')
+@php
+    $layout = class_exists(\Iquesters\UserInterface\UserInterfaceServiceProvider::class)
+        ? 'userinterface::layouts.app'
+        : config('dev.layout');
+@endphp
 
-@section('title', 'Vector Responses')
+@extends($layout)
+
+@section('page-title', \Iquesters\Foundation\Helpers\MetaHelper::make(['Vector Responses Old']))
+@section('meta-description', \Iquesters\Foundation\Helpers\MetaHelper::description('View old vector responses'))
 
 @section('content')
 <h5 class="fs-6">Vector Responses</h5>
