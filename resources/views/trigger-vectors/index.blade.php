@@ -1,10 +1,4 @@
-@php
-    $layout = class_exists(\Iquesters\UserInterface\UserInterfaceServiceProvider::class)
-        ? 'userinterface::layouts.app'
-        : config('dev.layout');
-@endphp
-
-@extends($layout)
+@extends('userinterface::layouts.app')
 
 @section('page-title', \Iquesters\Foundation\Helpers\MetaHelper::make(['Trigger Vector']))
 @section('meta-description', \Iquesters\Foundation\Helpers\MetaHelper::description('Trigger vector sync for WooCommerce integrations'))
