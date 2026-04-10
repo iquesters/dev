@@ -2,7 +2,16 @@
 
 @section('page-title', \Iquesters\Foundation\Helpers\MetaHelper::make(['Trigger Vector']))
 @section('meta-description', \Iquesters\Foundation\Helpers\MetaHelper::description('Trigger vector sync for WooCommerce integrations'))
-
+@php
+    $tabs = [
+        [
+            'route' => 'vectors.index',
+            'params' => [],
+            'icon' => 'fa-fw fas fa-satellite-dish',
+            'label' => 'Trigger Vector',
+        ],
+    ];
+@endphp
 @section('content')
 <h5 class="fs-6">WooCommerce Integrations</h5>
 
