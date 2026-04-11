@@ -1,7 +1,17 @@
 @extends('userinterface::layouts.app')
 
-@section('title', 'Vector Responses')
-
+@section('page-title', \Iquesters\Foundation\Helpers\MetaHelper::make(['Vector Responses Old']))
+@section('meta-description', \Iquesters\Foundation\Helpers\MetaHelper::description('View old vector responses'))
+@php
+    $tabs = [
+        [
+            'route' => 'vectors.responses.index',
+            'params' => [],
+            'icon' => 'fa-fw fas fa-draw-polygon',
+            'label' => 'Vector Responses Old',
+        ],
+    ];
+@endphp
 @section('content')
 <h5 class="fs-6">Vector Responses</h5>
 <div class="table-responsive">
