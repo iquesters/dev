@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -22,28 +23,31 @@ return new class extends Migration
             }
         });
 
-        Schema::table('vector_responses', function (Blueprint $table) {
-            try {
+        $hasUniqueIndex = collect(DB::select("SHOW INDEX FROM `vector_responses` WHERE Key_name = 'vector_responses_operation_id_unique'"))
+            ->isNotEmpty();
+
+        $hasNormalIndex = collect(DB::select("SHOW INDEX FROM `vector_responses` WHERE Key_name = 'vector_responses_operation_id_index'"))
+            ->isNotEmpty();
+
+        Schema::table('vector_responses', function (Blueprint $table) use ($hasUniqueIndex, $hasNormalIndex) {
+            if ($hasUniqueIndex) {
                 $table->dropUnique('vector_responses_operation_id_unique');
-            } catch (\Throwable) {
-                // Unique index may not exist on fresh databases.
             }
 
-            try {
+            if (! $hasNormalIndex) {
                 $table->index('operation_id', 'vector_responses_operation_id_index');
-            } catch (\Throwable) {
-                // Ignore if the normal index already exists.
             }
         });
     }
 
     public function down(): void
     {
-        Schema::table('vector_responses', function (Blueprint $table) {
-            try {
+        $hasNormalIndex = collect(DB::select("SHOW INDEX FROM `vector_responses` WHERE Key_name = 'vector_responses_operation_id_index'"))
+            ->isNotEmpty();
+
+        Schema::table('vector_responses', function (Blueprint $table) use ($hasNormalIndex) {
+            if ($hasNormalIndex) {
                 $table->dropIndex('vector_responses_operation_id_index');
-            } catch (\Throwable) {
-                // Ignore missing index.
             }
 
             if (Schema::hasColumn('vector_responses', 'step_status')) {
