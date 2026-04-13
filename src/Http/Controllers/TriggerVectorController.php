@@ -139,22 +139,134 @@ class TriggerVectorController extends Controller
 
         try {
             $vectorResponses = VectorResponse::query()
+                ->with('integration.supportedIntegration')
                 ->orderByDesc('id')
                 ->get();
-
-            $integrationNames = Integration::query()
-                ->whereIn('id', $vectorResponses->pluck('integration_id')->unique()->filter()->values())
-                ->pluck('name', 'id');
 
             $this->logInfo('Vector responses loaded: ' . $vectorResponses->count());
             $this->logMethodEnd();
 
-            return view('dev::vector-responses.index', compact('vectorResponses', 'integrationNames'));
+            $operations = $vectorResponses
+                ->groupBy(fn (VectorResponse $row) => (string) ($row->operation_id ?: $row->id))
+                ->map(function ($rows) {
+                    $latest = $rows->sortByDesc('id')->first();
+                    $first = $rows->sortBy('id')->first();
+
+                    return [
+                        'operation_id' => (int) ($latest->operation_id ?: $latest->id),
+                        'latest' => $latest,
+                        'first' => $first,
+                        'rows_count' => $rows->count(),
+                    ];
+                })
+                ->sortByDesc(fn (array $item) => $item['latest']->id)
+                ->values();
+
+            return view('dev::vector-responses.index', compact('operations'));
         } catch (\Throwable $e) {
             $this->logError('Vector responses list failed: ' . $e->getMessage());
             $this->logMethodEnd('FAILED');
 
             return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function showVectorOperation(int $operationId)
+    {
+        $this->logMethodStart("Loading vector operation {$operationId}");
+
+        try {
+            $records = VectorResponse::query()
+                ->with('integration.supportedIntegration')
+                ->where('operation_id', $operationId)
+                ->orderBy('id')
+                ->get();
+
+            if ($records->isEmpty()) {
+                return redirect()
+                    ->route('vectors.responses.index')
+                    ->with('error', "Operation {$operationId} was not found.");
+            }
+
+            $latest = $records->last();
+            $progress = $this->resolveProgressPercentage($latest, $records);
+
+            $this->logMethodEnd();
+
+            return view('dev::vector-responses.show', [
+                'operationId' => $operationId,
+                'records' => $records,
+                'latest' => $latest,
+                'progress' => $progress,
+            ]);
+        } catch (\Throwable $e) {
+            $this->logError('Vector operation view failed: ' . $e->getMessage());
+            $this->logMethodEnd('FAILED');
+
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    private function resolveProgressPercentage(VectorResponse $latest, $records): int
+    {
+        try {
+            $maxSteps = 6;
+            $stepStatus = (int) ($latest->step_status ?? 0);
+            $normalizedStatus = strtolower((string) $latest->status);
+            $recordsCount = $records->count();
+            $decodedResponse = $latest->decoded_response;
+            $accepted = (bool) data_get($decodedResponse, 'response_body.accepted', false);
+            $duplicateSuppressed = (bool) data_get($decodedResponse, 'response_body.duplicate_suppressed', false);
+            $productsDone = data_get($decodedResponse, 'payload.products_done');
+            $productsTotal = data_get($decodedResponse, 'payload.products_total');
+
+            if ($stepStatus === -1 || $normalizedStatus === 'failed') {
+                return 100;
+            }
+
+            if ($stepStatus === 3 || $normalizedStatus === 'processing') {
+                $processingRows = $records->filter(function (VectorResponse $record) {
+                    return (int) ($record->step_status ?? 0) === 3 || strtolower((string) $record->status) === 'processing';
+                })->count();
+
+                if ($processingRows > 0) {
+                    $stepProgress = (int) round((min($processingRows, $maxSteps) / $maxSteps) * 100);
+
+                    if (is_numeric($productsDone) && is_numeric($productsTotal) && (int) $productsTotal > 0) {
+                        $productProgress = (int) round((((int) $productsDone / (int) $productsTotal) * 100));
+
+                        return max($stepProgress, min(99, $productProgress));
+                    }
+
+                    return min(99, max(16, $stepProgress));
+                }
+
+                if (is_numeric($productsDone) && is_numeric($productsTotal) && (int) $productsTotal > 0) {
+                    $ratio = ((int) $productsDone / (int) $productsTotal) * 100;
+
+                    return max(5, min(99, (int) round($ratio)));
+                }
+
+                return 16;
+            }
+
+            if ($stepStatus === 0 && $duplicateSuppressed) {
+                return 100;
+            }
+
+            if ($accepted && $recordsCount === 1) {
+                return 16;
+            }
+
+            if (in_array($stepStatus, [0, 1, 2], true) || $normalizedStatus === 'completed') {
+                return 100;
+            }
+
+            return min(95, max(15, $recordsCount * 20));
+        } catch (\Throwable $e) {
+            $this->logWarning('Progress percentage fallback used: ' . $e->getMessage());
+
+            return 16;
         }
     }
 }

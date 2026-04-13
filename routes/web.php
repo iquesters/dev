@@ -8,6 +8,7 @@ Route::middleware(['web','auth'])->group(function () {
     Route::prefix('vector')->name('vectors.')->group(function () {
         Route::get('/', [TriggerVectorController::class, 'index'])->name('index');
         Route::get('/responses', [TriggerVectorController::class, 'vectorResponses'])->name('responses.index');
+        Route::get('/responses/{operationId}', [TriggerVectorController::class, 'showVectorOperation'])->name('responses.show');
         Route::post('/{integrationUid}/trigger', [TriggerVectorController::class, 'trigger'])->name('trigger');
     });
 });

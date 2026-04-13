@@ -1,7 +1,7 @@
 @extends('userinterface::layouts.app')
 
-@section('page-title', \Iquesters\Foundation\Helpers\MetaHelper::make(['Vector Responses Old']))
-@section('meta-description', \Iquesters\Foundation\Helpers\MetaHelper::description('View old vector responses'))
+@section('page-title', \Iquesters\Foundation\Helpers\MetaHelper::make(['Vector Operations']))
+@section('meta-description', \Iquesters\Foundation\Helpers\MetaHelper::description('Track vector v2 operations'))
 @php
     $tabs = [
         [
@@ -12,33 +12,45 @@
         ],
     ];
 @endphp
+
 @section('content')
-<h5 class="fs-6">Vector Responses</h5>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="fs-6 mb-1">Vector Operations</h5>
+        </div>
+    </div>
+
 <div class="table-responsive">
     <table id="vectorResponsesTable" class="table table-bordered table-striped table-sm align-middle w-100">
         <thead>
             <tr>
-                <th>ID</th>
+                <th>Operation ID</th>
                 <th>Integration Name</th>
-                <th>Response</th>
-                <th>Duration Seconds</th>
+                <th>Integration UID</th>
+                <th>Latest Message</th>
                 <th>Status</th>
                 <th>Started At</th>
-                <th>Finished At</th>
+                <th>Updated At</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($vectorResponses as $row)
+            @foreach($operations as $operation)
+                @php
+                    $latest = $operation['latest'];
+                    $integration = $latest->integration;
+                @endphp
                 <tr>
-                    <td>{{ $row->id }}</td>
-                    <td>{{ $integrationNames[$row->integration_id] ?? '-' }}</td>
                     <td>
-                        <pre class="mb-0" style="white-space: pre-wrap; word-break: break-word; max-width: 700px;">{{ $row->response }}</pre>
+                        <a href="{{ route('vectors.responses.show', ['operationId' => $operation['operation_id']]) }}">
+                            {{ $operation['operation_id'] }}
+                        </a>
                     </td>
-                    <td>{{ $row->duration_seconds ?? '-' }}</td>
-                    <td><x-userinterface::status :status="$row->status" /></td>
-                    <td>{{ $row->started_at ? \Iquesters\Foundation\Helpers\DateTimeHelper::displayDateTime($row->started_at) : '-' }}</td>
-                    <td>{{ $row->finished_at ? \Iquesters\Foundation\Helpers\DateTimeHelper::displayDateTime($row->finished_at) : '-' }}</td>
+                    <td>{{ $integration?->name ?? '-' }}</td>
+                    <td><code>{{ $integration?->uid ?? '-' }}</code></td>
+                    <td>{{ $latest->message ?? '-' }}</td>
+                    <td><x-userinterface::status :status="$latest->status" /></td>
+                    <td>{{ $operation['first']?->created_at ? \Iquesters\Foundation\Helpers\DateTimeHelper::displayDateTime($operation['first']->created_at) : '-' }}</td>
+                    <td>{{ $latest->created_at ? \Iquesters\Foundation\Helpers\DateTimeHelper::displayDateTime($latest->created_at) : '-' }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -50,10 +62,10 @@
 <script>
 $(document).ready(function () {
     $('#vectorResponsesTable').DataTable({
-        order: [[0, 'desc']],
-        responsive: true
+        order: [[3, 'desc']],
+        responsive: true,
+        pageLength: 25
     });
-
 });
 </script>
 @endpush
