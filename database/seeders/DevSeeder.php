@@ -82,7 +82,18 @@ class DevSeeder extends BaseSeeder
         ],
     ];
 
-    protected array $entities = [];
+    protected array $entities = [
+        'vector_responses' => [
+            'fields' => [],
+            'meta_fields' => [],
+            'metas' => [],
+        ],
+        'knobs' => [
+            'fields' => [],
+            'meta_fields' => [],
+            'metas' => [],
+        ],
+    ];
 
     /**
      * Custom seeding logic for dev module
